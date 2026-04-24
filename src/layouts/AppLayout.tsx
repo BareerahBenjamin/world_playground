@@ -6,8 +6,8 @@ import BottomDock from "@/components/BottomDock";
 export default function AppLayout() {
   const location = useLocation();
   return (
-    <div className="min-h-screen relative z-0">
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-10 h-16 border-b-2 border-foreground bg-card/95 backdrop-blur">
+    <div className="h-[100dvh] flex flex-col relative z-0 overflow-hidden bg-background">
+      <header className="flex-none z-40 flex items-center justify-between px-4 md:px-10 h-16 border-b-2 border-foreground bg-card/95 backdrop-blur">
         <div className="flex items-baseline gap-2 md:gap-3 min-w-0">
           <h1 className="font-serif-en text-base md:text-xl tracking-wide truncate">
             World · Playground
@@ -45,7 +45,7 @@ export default function AppLayout() {
         </NavLink>
       </header>
 
-      <main key={location.pathname} className="relative z-0 paper-in pb-20">
+      <main key={location.pathname} className="flex-1 overflow-y-auto relative z-0 paper-in p-0">
         <Outlet />
       </main>
 

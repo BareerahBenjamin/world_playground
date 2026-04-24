@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { IconSpark, IconMountain, IconScroll } from "@/components/HandIcon";
 
 const DOCK_ITEMS = [
-  { to: "/",        label: "Playground", Icon: IconSpark    },
+  { to: "/home",    label: "Playground", Icon: IconSpark    },
   { to: "/goals",   label: "Goals",      Icon: IconMountain },
   { to: "/records", label: "Records",    Icon: IconScroll   },
 ] as const;
@@ -11,9 +11,9 @@ const DOCK_ITEMS = [
 export default function BottomDock() {
   const location = useLocation();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 h-16 flex items-stretch bg-card/95 backdrop-blur border-t-2 border-foreground">
+    <nav className="flex-none relative z-40 h-16 flex items-stretch bg-card/95 backdrop-blur border-t-2 border-foreground">
       {DOCK_ITEMS.map(({ to, label, Icon }) => {
-        const active = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+        const active = location.pathname.startsWith(to);
         return (
           <NavLink
             key={to}
