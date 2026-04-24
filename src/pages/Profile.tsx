@@ -27,8 +27,10 @@ import {
 } from "@/components/HandIcon";
 
 import { useNavigate } from "react-router-dom";
+import { logout, getPlayerName } from "@/lib/auth";
 
-const playerName = localStorage.getItem("player_name") || PLAYER.name;
+// 使用 auth 模块实时读取用户名
+const playerName = getPlayerName() || PLAYER.name;
 
 const CharmIcon = ({ id }: { id: string }) => {
   const map: Record<string, JSX.Element> = {
@@ -60,10 +62,11 @@ const Profile = () => {
   );
 
   const nav = useNavigate();
-  
+
+  // 修复：退出后跳 /login，不经过 /（避免登录循环）
   const handleLogout = () => {
-    localStorage.removeItem("player_name");
-    nav("/");  // 换成你的登录页路由
+    logout();
+    nav("/login", { replace: true });
   };
 
   const categoryCounts = (
@@ -194,21 +197,26 @@ const Profile = () => {
                 strokeWidth="0.7"
               />
               {traitKeys.map((k, i) => {
-                const a = (Math.PI * 2 * i) / 4 - Math.PI / 2;
-                const x = 50 + 48 * Math.cos(a);
-                const y = 50 + 48 * Math.sin(a);
+                const angle = (Math.PI * 2 * i) / 4 - Math.PI / 2;
+                const lx = 50 + 48 * Math.cos(angle);
+                const ly = 50 + 48 * Math.sin(angle);
+                const labels: Record<string, string> = {
+                  courage: "勇气",
+                  create: "创造",
+                  flourish: "丰容",
+                  solitude: "独处",
+                };
                 return (
                   <text
                     key={k}
-                    x={x}
-                    y={y}
-                    fontSize="6"
+                    x={lx}
+                    y={ly}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill={CATEGORY_META[k].color}
-                    style={{ fontFamily: "Caveat, cursive" }}
+                    fontSize="5"
+                    fill="hsl(var(--ink-faded))"
                   >
-                    {CATEGORY_META[k].label[0]} {PLAYER_TRAITS[k]}
+                    {labels[k]}
                   </text>
                 );
               })}
@@ -217,218 +225,101 @@ const Profile = () => {
         </div>
       </header>
 
-      {/* 装备护符 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        心境护符 · 装备一枚
-        <span className="flex-1 h-px bg-secondary" />
-        {equippedCharm && (
-          <span className="font-hand text-xs text-muted-foreground inline-flex items-center gap-1">
-            当前： <CharmIcon id={equippedCharm.id} /> {equippedCharm.name}
-          </span>
-        )}
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        {CHARMS.map((c) => (
-          <div
-            key={c.id}
-            className={`ink-card p-4 ${!c.owned ? "opacity-50" : ""} ${
-              c.equipped ? "ring-2 ring-[hsl(var(--gold))]" : ""
-            }`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-foreground">
-                {c.owned ? <CharmIcon id={c.id} /> : <IconLock size={20} />}
-              </span>
-              <p className="font-serif-en text-base">{c.name}</p>
+      {/* 护符 */}
+      {equippedCharm && (
+        <section className="ink-card p-5 mb-6">
+          <h3 className="font-serif-en text-lg mb-3 flex items-center gap-3">
+            装备护符
+            <span className="flex-1 h-px bg-secondary" />
+            <Link to="/codex" className="font-hand text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+              图鉴 <IconArrowRight size={11} />
+            </Link>
+          </h3>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">{equippedCharm.emoji}</span>
+            <div>
+              <p className="font-serif-en">{equippedCharm.name}</p>
+              <p className="font-hand text-sm text-muted-foreground">{equippedCharm.desc}</p>
+              <p className="text-xs text-muted-foreground mt-1">{equippedCharm.effect}</p>
             </div>
-            <p className="text-xs text-foreground/75 leading-snug mb-1">
-              {c.desc}
-            </p>
-            <p className="font-hand text-[11px] text-[hsl(var(--gold))] inline-flex items-center gap-1">
-              <IconStarFour size={10} /> {c.effect}
-            </p>
-            {c.equipped && (
-              <p className="font-hand text-[10px] text-muted-foreground mt-1">
-                · 已装备 ·
-              </p>
-            )}
           </div>
-        ))}
-      </div>
-
-      {/* 称号 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        称号收藏
-        <span className="flex-1 h-px bg-secondary" />
-      </h3>
-      <div className="flex flex-wrap gap-2 mb-10">
-        {TITLES.map((t) => (
-          <span
-            key={t.id}
-            className={`px-3 py-1 text-xs border-2 rounded-sm inline-flex items-center gap-1.5 ${
-              t.unlocked
-                ? t.active
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-foreground bg-card"
-                : "border-foreground/30 text-muted-foreground bg-secondary/40"
-            }`}
-            title={t.desc}
-          >
-            {t.unlocked ? <IconStarFour size={11} /> : <IconLock size={11} />}
-            {t.name}
-            <span className="font-hand text-[10px] opacity-70">
-              {t.desc}
-            </span>
-          </span>
-        ))}
-      </div>
-
-      {/* 数据织锦 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        数据织锦
-        <span className="flex-1 h-px bg-secondary" />
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        <div className="dashed-frame p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">足迹</p>
-          <p className="font-hand text-xl mt-1">{MAP_PLACES.length} 处</p>
-        </div>
-        <div className="dashed-frame p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">记录</p>
-          <p className="font-hand text-xl mt-1">{RECORDS.length} 笔</p>
-        </div>
-        <div className="dashed-frame p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">目标</p>
-          <p className="font-hand text-xl mt-1">{GOALS.length} 个</p>
-        </div>
-        <div className="dashed-frame p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">里程碑</p>
-          <p className="font-hand text-xl mt-1">
-            {doneMilestones}/{totalMilestones}
-          </p>
-        </div>
-      </div>
-
-      {/* 四类印记分布 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        四类印记分布
-        <span className="flex-1 h-px bg-secondary" />
-        <Link
-          to="/codex"
-          className="font-hand text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 hand-link"
-        >
-          翻开图鉴 <IconArrowRight size={12} />
-        </Link>
-      </h3>
-      <div className="grid md:grid-cols-4 gap-3 mb-10">
-        {categoryCounts.map(({ key, count }) => {
-          const m = CATEGORY_META[key];
-          const max = Math.max(...categoryCounts.map((c) => c.count), 1);
-          return (
-            <div
-              key={key}
-              className="ink-card p-4"
-              style={{ borderColor: m.color }}
-            >
-              <p
-                className="font-hand text-sm inline-flex items-center gap-1.5"
-                style={{ color: m.color }}
-              >
-                <CategoryIcon category={key} size={13} />
-                {m.label}
-              </p>
-              <div className="h-1.5 bg-secondary rounded-sm overflow-hidden mt-2 mb-2 border border-foreground/30">
-                <div
-                  className="h-full transition-all duration-700"
-                  style={{
-                    width: `${(count / max) * 100}%`,
-                    background: m.color,
-                  }}
-                />
-              </div>
-              <p className="font-hand text-xs text-muted-foreground">
-                {count} 笔印记
-              </p>
-            </div>
-          );
-        })}
-      </div>
+        </section>
+      )}
 
       {/* 成就 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        成就 · 徽章
-        <span className="flex-1 h-px bg-secondary" />
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-        {achievements.map((a) => (
-          <div
-            key={a.id}
-            className={`ink-card p-4 flex items-center gap-3 ${
-              a.got ? "" : "opacity-55"
-            }`}
-          >
+      <section className="mb-8">
+        <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
+          成就印记
+          <span className="flex-1 h-px bg-secondary" />
+        </h3>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {achievements.map((a) => (
             <div
-              className={`w-12 h-12 rounded-sm border-2 border-foreground flex items-center justify-center flex-shrink-0 ${
-                a.got ? "bg-accent" : "bg-secondary"
-              }`}
+              key={a.id}
+              className={`ink-card p-4 flex items-start gap-3 ${!a.got ? "opacity-50" : ""}`}
             >
-              {a.got ? <AchievementIcon id={a.id} /> : <IconLock size={20} />}
-            </div>
-            <div className="min-w-0">
-              <p className="font-serif-en text-base leading-tight">{a.name}</p>
-              <p className="text-xs text-muted-foreground leading-snug mt-0.5">
-                {a.desc}
-              </p>
-              {!a.got && a.progress && (
-                <p className="font-hand text-[11px] text-muted-foreground mt-1">
-                  进度 {a.progress}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 我的记录 */}
-      <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
-        我的记录
-        <span className="flex-1 h-px bg-secondary" />
-        <Link
-          to="/chronicle"
-          className="font-hand text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 hand-link"
-        >
-          翻开编年史 <IconArrowRight size={12} />
-        </Link>
-      </h3>
-      <div className="grid md:grid-cols-2 gap-3">
-        {RECORDS.map((r) => {
-          const m = r.category ? CATEGORY_META[r.category] : null;
-          return (
-            <div key={r.id} className="ink-card p-4">
-              <div className="flex items-baseline justify-between mb-1">
-                <p className="font-hand text-xs text-muted-foreground inline-flex items-center gap-1.5">
-                  {r.date}
-                  <span className="text-foreground/30">·</span>
-                  <WeatherIcon symbol={r.weather} size={11} />
-                  <span className="text-foreground/30">·</span>
-                  <IconMapPin size={11} /> {r.place}
-                </p>
-                {m && r.category && (
-                  <span style={{ color: m.color }}>
-                    <CategoryIcon category={r.category} size={12} />
-                  </span>
+              <div className="w-9 h-9 rounded-sm border-2 border-foreground flex items-center justify-center flex-shrink-0">
+                {a.got ? <AchievementIcon id={a.id} /> : <IconLock size={18} />}
+              </div>
+              <div className="min-w-0">
+                <p className="font-serif-en text-sm leading-snug">{a.name}</p>
+                <p className="font-hand text-xs text-muted-foreground mt-0.5">{a.desc}</p>
+                {"progress" in a && (
+                  <p className="font-serif-en text-xs text-muted-foreground mt-1">{(a as any).progress}</p>
                 )}
               </div>
-              <p className="text-sm text-foreground/85 leading-relaxed line-clamp-2 mb-2">
-                {r.text}
-              </p>
-              <p className="font-hand text-xs border-t border-dashed border-foreground/30 pt-2 text-muted-foreground">
-                ↳ {r.echo}
-              </p>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 分类足迹 */}
+      <section className="mb-8">
+        <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
+          各地形足迹
+          <span className="flex-1 h-px bg-secondary" />
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {categoryCounts.map(({ key, count }) => {
+            const m = CATEGORY_META[key];
+            return (
+              <Link
+                key={key}
+                to={`/map?surface=inner&cat=${key}`}
+                className="ink-card p-4 text-center hover:-translate-y-0.5 transition-transform"
+                style={{ borderColor: m.color }}
+              >
+                <p className="text-2xl mb-1">{m.emoji}</p>
+                <p className="font-hand text-xs" style={{ color: m.color }}>{m.label}</p>
+                <p className="font-serif-en text-xl mt-1">{count}</p>
+                <p className="text-[10px] text-muted-foreground">次足迹</p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 地点探索 */}
+      <section className="mb-8">
+        <h3 className="font-serif-en text-lg mb-4 flex items-center gap-3">
+          探索版图
+          <span className="flex-1 h-px bg-secondary" />
+          <Link to="/map" className="font-hand text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            地图 <IconArrowRight size={11} />
+          </Link>
+        </h3>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {MAP_PLACES.map((p) => (
+            <div key={p.name} className="ink-card p-4 flex items-center gap-3">
+              <IconMapPin size={18} className="flex-shrink-0 text-muted-foreground" />
+              <div>
+                <p className="font-serif-en text-sm">{p.name}</p>
+                <p className="font-hand text-xs text-muted-foreground">{p.count} 次到访</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </article>
   );
 };

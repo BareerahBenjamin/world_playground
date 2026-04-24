@@ -20,7 +20,9 @@ import Letter from "./pages/intro/Letter";
 import Login from "./pages/intro/Login";
 import Tower from "./pages/intro/Tower";
 import NotFound from "./pages/NotFound.tsx";
-import { useEffect, useRef, useState } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { isLoggedIn, isFirstVisit } from "./lib/auth";
+import { useEffect, useRef } from "react";
 
 // intro 路径列表 — 全屏覆盖页，不需要额外过渡包装
 const INTRO_PATHS = ["/intro/1", "/intro/2", "/intro/3", "/letter", "/login", "/tower"];
@@ -32,7 +34,7 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
   const isIntro = INTRO_PATHS.includes(location.pathname);
 
   useEffect(() => {
-    if (isIntro) return; // intro 页面自己管动画
+    if (isIntro) return;
     const el = ref.current;
     if (!el) return;
     el.style.opacity = "0";
@@ -69,14 +71,26 @@ const App = () => (
   </QueryClientProvider>
 );
 
+/**
+ * 根路由智能跳转：
+ * - 已登录 → /home（跳过 intro）
+ * - 未登录 + 首次访问 → /intro/1（看完整开场动画）
+ * - 未登录 + 已访问过 → /login（退出后直接去登录页，不重走 intro）
+ */
+const RootRedirect = () => {
+  if (isLoggedIn()) return <Navigate to="/home" replace />;
+  if (isFirstVisit()) return <Navigate to="/intro/1" replace />;
+  return <Navigate to="/login" replace />;
+};
+
 const AppRoutes = () => {
   return (
     <PageTransition>
       <Routes>
-        {/* 首次打开跳转到开场动画 */}
-        <Route path="/" element={<Navigate to="/intro/1" replace />} />
+        {/* 根路由智能跳转 */}
+        <Route path="/" element={<RootRedirect />} />
 
-        {/* 叙事入口 */}
+        {/* 叙事入口（无需登录） */}
         <Route path="/intro/1" element={<Cover1 />} />
         <Route path="/intro/2" element={<Cover2 />} />
         <Route path="/intro/3" element={<Cover3 />} />
@@ -84,8 +98,14 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/tower" element={<Tower />} />
 
-        {/* 主应用 */}
-        <Route element={<AppLayout />}>
+        {/* 主应用（需要登录） */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/home" element={<Today />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/map" element={<MapHub />} />
@@ -96,6 +116,7 @@ const AppRoutes = () => {
           <Route path="/quest/:id" element={<QuestDetail />} />
           <Route path="/quest/:id/record" element={<QuestRecord />} />
         </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PageTransition>
