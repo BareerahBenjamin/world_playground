@@ -4,47 +4,66 @@ import bg from "@/assets/cover-fairytale.png";
 
 const Cover1 = () => {
   const nav = useNavigate();
-  const [ready, setReady] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
-  // 图片预加载：加载完成后才开始计时
   useEffect(() => {
     const img = new Image();
     img.src = bg;
-    const start = () => {
-      setReady(true);
-      timerRef.current = setTimeout(() => nav("/intro/2"), 3000);
+    const onLoad = () => {
+      setImgLoaded(true);
+      // 下一帧再触发 visible，让浏览器有时间绘制背景
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true));
+      });
     };
     if (img.complete) {
-      start();
+      onLoad();
     } else {
-      img.onload = start;
-      // 加载失败也不卡住，直接开始计时
-      img.onerror = start;
+      img.onload = onLoad;
+      img.onerror = onLoad;
     }
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    // 展示 2.5s 后开始淡出，淡出 600ms 后跳转
+    const leaveTimer = setTimeout(() => setLeaving(true), 2500);
+    const navTimer = setTimeout(() => nav("/intro/2"), 3100);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimeout(leaveTimer);
+      clearTimeout(navTimer);
     };
-  }, [nav]);
+  }, [visible, nav]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center"
       style={{
-        backgroundImage: ready ? `url(${bg})` : "none",
-        backgroundColor: ready ? undefined : "hsl(var(--night-deep))",
-        transition: "background-color 0.3s ease",
+        backgroundImage: imgLoaded ? `url(${bg})` : "none",
+        backgroundColor: "hsl(222, 38%, 6%)",
+        opacity: leaving ? 0 : visible ? 1 : 0,
+        transition: leaving
+          ? "opacity 600ms ease-in"
+          : "opacity 700ms ease-out",
       }}
     >
       <div className="absolute inset-0 bg-black/25" />
-      {ready && (
-        <p className="relative font-serif-en text-center px-8 max-w-md text-[hsl(var(--cream))] leading-loose text-lg md:text-xl paper-in drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
-          很久以前，这片世界，<br />
-          曾漫有漫天星光，<br />
-          万物繁盛，生机盎然。
-        </p>
-      )}
+      <p
+        className="relative font-serif-en text-center px-8 max-w-md text-[hsl(var(--cream))] leading-loose text-lg md:text-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]"
+        style={{
+          opacity: visible && !leaving ? 1 : 0,
+          transform: visible && !leaving ? "translateY(0)" : "translateY(12px)",
+          transition: "opacity 800ms ease-out 300ms, transform 800ms ease-out 300ms",
+        }}
+      >
+        很久以前，这片世界，<br />
+        曾漫有漫天星光，<br />
+        万物繁盛，生机盎然。
+      </p>
     </div>
   );
 };
+
 export default Cover1;

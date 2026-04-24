@@ -20,27 +20,33 @@ import Letter from "./pages/intro/Letter";
 import Login from "./pages/intro/Login";
 import Tower from "./pages/intro/Tower";
 import NotFound from "./pages/NotFound.tsx";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// 全局淡入淡出过渡：每次路由切换时触发
+// intro 路径列表 — 全屏覆盖页，不需要额外过渡包装
+const INTRO_PATHS = ["/intro/1", "/intro/2", "/intro/3", "/letter", "/login", "/tower"];
+
+// 普通应用页面的淡入过渡（不影响 intro）
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const ref = useRef<HTMLDivElement>(null);
+  const isIntro = INTRO_PATHS.includes(location.pathname);
 
   useEffect(() => {
+    if (isIntro) return; // intro 页面自己管动画
     const el = ref.current;
     if (!el) return;
     el.style.opacity = "0";
-    el.style.transform = "scale(1.015)";
-    // 强制回流后开始过渡
+    el.style.transform = "translateY(6px)";
     void el.offsetHeight;
-    el.style.transition = "opacity 500ms ease, transform 500ms ease";
+    el.style.transition = "opacity 400ms ease, transform 400ms ease";
     el.style.opacity = "1";
-    el.style.transform = "scale(1)";
+    el.style.transform = "translateY(0)";
     return () => {
       el.style.transition = "";
     };
-  }, [location.pathname]);
+  }, [location.pathname, isIntro]);
+
+  if (isIntro) return <>{children}</>;
 
   return (
     <div ref={ref} style={{ minHeight: "100%", willChange: "opacity, transform" }}>

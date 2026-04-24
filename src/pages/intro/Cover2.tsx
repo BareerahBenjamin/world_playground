@@ -1,49 +1,67 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bg from "@/assets/cover-desolate.png";
 
 const Cover2 = () => {
   const nav = useNavigate();
-  const [ready, setReady] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
-  // 图片预加载：加载完成后才开始计时
   useEffect(() => {
     const img = new Image();
     img.src = bg;
-    const start = () => {
-      setReady(true);
-      timerRef.current = setTimeout(() => nav("/intro/3"), 3000);
+    const onLoad = () => {
+      setImgLoaded(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true));
+      });
     };
     if (img.complete) {
-      start();
+      onLoad();
     } else {
-      img.onload = start;
-      img.onerror = start;
+      img.onload = onLoad;
+      img.onerror = onLoad;
     }
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    const leaveTimer = setTimeout(() => setLeaving(true), 2500);
+    const navTimer = setTimeout(() => nav("/intro/3"), 3100);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimeout(leaveTimer);
+      clearTimeout(navTimer);
     };
-  }, [nav]);
+  }, [visible, nav]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center"
       style={{
-        backgroundImage: ready ? `url(${bg})` : "none",
-        backgroundColor: ready ? undefined : "hsl(var(--night-deep))",
-        transition: "background-color 0.3s ease",
+        backgroundImage: imgLoaded ? `url(${bg})` : "none",
+        backgroundColor: "hsl(222, 38%, 6%)",
+        opacity: leaving ? 0 : visible ? 1 : 0,
+        transition: leaving
+          ? "opacity 600ms ease-in"
+          : "opacity 700ms ease-out",
       }}
     >
       <div className="absolute inset-0 bg-black/35" />
-      {ready && (
-        <p className="relative font-serif-en text-center px-8 max-w-md text-[hsl(var(--night-text))] leading-loose text-lg md:text-xl paper-in drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-          直到一场漫长的沉寂缓缓降临，<br />
-          光芒散尽，山河褪色，<br />
-          无数角落，归于寂静与荒芜。
-        </p>
-      )}
+      <p
+        className="relative font-serif-en text-center px-8 max-w-md text-[hsl(var(--night-text))] leading-loose text-lg md:text-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
+        style={{
+          opacity: visible && !leaving ? 1 : 0,
+          transform: visible && !leaving ? "translateY(0)" : "translateY(12px)",
+          transition: "opacity 800ms ease-out 300ms, transform 800ms ease-out 300ms",
+        }}
+      >
+        直到一场漫长的沉寂缓缓降临，<br />
+        光芒散尽，山河褪色，<br />
+        无数角落，归于寂静与荒芜。
+      </p>
     </div>
   );
 };
+
 export default Cover2;

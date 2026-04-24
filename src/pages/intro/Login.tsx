@@ -1,12 +1,17 @@
-import { FormEvent } from "react";
+import { FormEvent, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const nav = useNavigate();
+  const nicknameRef = useRef<HTMLInputElement>(null);
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const nickname = nicknameRef.current?.value || "无名旅人";
+    localStorage.setItem("player_name", nickname);
     nav("/tower");
   };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[hsl(var(--night-deep))] flex items-center justify-center px-5 py-10">
       <div className="absolute inset-0 pointer-events-none opacity-50"
@@ -34,6 +39,7 @@ const Login = () => {
         <label className="block mb-4">
           <span className="text-xs tracking-widest text-[hsl(var(--ink-faded))] font-serif-en">昵称</span>
           <input
+            ref={nicknameRef}
             type="text"
             required
             placeholder="独行旅人"
@@ -70,4 +76,5 @@ const Login = () => {
     </div>
   );
 };
+
 export default Login;

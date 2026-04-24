@@ -26,6 +26,10 @@ import {
   WeatherIcon,
 } from "@/components/HandIcon";
 
+import { useNavigate } from "react-router-dom";
+
+const playerName = localStorage.getItem("player_name") || PLAYER.name;
+
 const CharmIcon = ({ id }: { id: string }) => {
   const map: Record<string, JSX.Element> = {
     "c-1": <IconLeaf size={22} />,
@@ -54,6 +58,13 @@ const Profile = () => {
     (s, g) => s + g.milestones.filter((m) => m.done).length,
     0,
   );
+
+  const nav = useNavigate();
+  
+  const handleLogout = () => {
+    localStorage.removeItem("player_name");
+    nav("/");  // 换成你的登录页路由
+  };
 
   const categoryCounts = (
     Object.keys(CATEGORY_META) as (keyof typeof CATEGORY_META)[]
@@ -101,6 +112,14 @@ const Profile = () => {
   return (
     <article className="max-w-5xl mx-auto px-5 md:px-10 py-8">
       <header className="ink-card p-6 md:p-8 mb-8">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleLogout}
+            className="font-hand text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            · 离开高塔 ·
+          </button>
+        </div>
         <div className="grid md:grid-cols-[auto_1fr_auto] gap-6 items-center">
           <div className="flex flex-col items-center">
             <div className="relative w-24 h-24 rounded-sm border-2 border-foreground bg-accent flex items-center justify-center font-serif-en text-5xl ink-bloom">
@@ -117,7 +136,7 @@ const Profile = () => {
           <div className="min-w-0">
             <p className="font-hand text-sm text-muted-foreground">Player</p>
             <h2 className="text-2xl md:text-3xl font-serif-en">
-              {PLAYER.name}
+              {playerName}
             </h2>
             {activeTitle && (
               <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 text-xs border-2 border-foreground bg-secondary rounded-sm">
