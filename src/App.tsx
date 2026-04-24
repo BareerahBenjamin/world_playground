@@ -8,6 +8,7 @@ import Today from "./pages/Today";
 import Goals from "./pages/Goals";
 import MapHub from "./pages/MapHub";
 import Chronicle from "./pages/Chronicle";
+import Records from "./pages/Records";
 import Profile from "./pages/Profile";
 import Codex from "./pages/Codex";
 import QuestDetail from "./pages/QuestDetail";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/goals" element={<Goals />} />
             <Route path="/map" element={<MapHub />} />
             <Route path="/chronicle" element={<Chronicle />} />
+            <Route path="/records" element={<Records />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/codex" element={<Codex />} />
             <Route path="/quest/:id" element={<QuestDetail />} />

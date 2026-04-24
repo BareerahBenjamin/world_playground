@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CATEGORY_META, RECORDS } from "@/data/world";
+import { CATEGORY_META, RECORDS, type JourneyRecord } from "@/data/world";
+import { useUserRecords } from "@/data/recordStore";
 import {
   CategoryIcon,
   IconArrowRight,
@@ -13,6 +14,8 @@ type Tab = "scroll" | "chapter" | "weave";
 
 const Chronicle = () => {
   const [tab, setTab] = useState<Tab>("scroll");
+  const userRecs = useUserRecords();
+  const allRecords = useMemo(() => [...userRecs, ...RECORDS], [userRecs]);
 
   return (
     <article className="max-w-5xl mx-auto px-5 md:px-10 py-8">
@@ -45,18 +48,18 @@ const Chronicle = () => {
         </nav>
       </header>
 
-      {tab === "scroll" && <ScrollView />}
-      {tab === "chapter" && <ChapterView />}
-      {tab === "weave" && <WeaveView />}
+      {tab === "scroll" && <ScrollView records={allRecords} />}
+      {tab === "chapter" && <ChapterView records={allRecords} />}
+      {tab === "weave" && <WeaveView records={allRecords} />}
     </article>
   );
 };
 
-const ScrollView = () => (
+export const ScrollView = ({ records }: { records: JourneyRecord[] }) => (
   <div className="relative">
     <div className="absolute left-3 md:left-4 top-2 bottom-2 w-px bg-foreground/30" />
     <div className="space-y-5">
-      {RECORDS.map((r, i) => {
+      {records.map((r, i) => {
         const m = r.category ? CATEGORY_META[r.category] : null;
         return (
           <div key={r.id} className="relative pl-10 md:pl-12">
@@ -102,11 +105,11 @@ const ScrollView = () => (
   </div>
 );
 
-const ChapterView = () => {
+export const ChapterView = ({ records }: { records: JourneyRecord[] }) => {
   const groups = Object.entries(CATEGORY_META).map(([k, m]) => ({
     key: k as keyof typeof CATEGORY_META,
     meta: m,
-    items: RECORDS.filter((r) => r.category === k),
+    items: records.filter((r) => r.category === k),
   }));
 
   return (
@@ -160,11 +163,11 @@ const ChapterView = () => {
   );
 };
 
-const WeaveView = () => {
+export const WeaveView = ({ records }: { records: JourneyRecord[] }) => {
   const counts = Object.entries(CATEGORY_META).map(([k, m]) => ({
     key: k as keyof typeof CATEGORY_META,
     meta: m,
-    n: RECORDS.filter((r) => r.category === k).length,
+    n: records.filter((r) => r.category === k).length,
   }));
   const max = Math.max(...counts.map((c) => c.n), 1);
 
@@ -200,7 +203,7 @@ const WeaveView = () => {
         <h3 className="font-serif-en text-xl mb-4">本月情绪</h3>
         <div className="grid grid-cols-5 gap-2 text-center text-xs">
           {(["轻盈", "平静", "明亮", "沉重", "混沌"] as const).map((f) => {
-            const n = RECORDS.filter((r) => r.feeling === f).length;
+            const n = records.filter((r) => r.feeling === f).length;
             return (
               <div key={f} className="dashed-frame p-3">
                 <p className="font-hand text-base">{n}</p>
@@ -217,7 +220,7 @@ const WeaveView = () => {
       <div className="ink-card p-6 md:col-span-2">
         <h3 className="font-serif-en text-xl mb-4">出现过的关键词</h3>
         <div className="flex flex-wrap gap-2">
-          {Array.from(new Set(RECORDS.flatMap((r) => r.tags))).map((t) => (
+          {Array.from(new Set(records.flatMap((r) => r.tags))).map((t) => (
             <span key={t} className="ink-tag font-hand">
               #{t}
             </span>

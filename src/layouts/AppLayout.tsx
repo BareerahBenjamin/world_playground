@@ -1,19 +1,13 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { PLAYER } from "@/data/world";
 import { cn } from "@/lib/utils";
-
-const TABS = [
-  { to: "/", label: "今日", en: "Today" },
-  { to: "/goals", label: "目标关卡", en: "Goals" },
-  { to: "/map", label: "地图", en: "Map" },
-  { to: "/chronicle", label: "编年史", en: "Chronicle" },
-];
+import BottomDock from "@/components/BottomDock";
 
 export default function AppLayout() {
   const location = useLocation();
   return (
     <div className="min-h-screen relative z-0">
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-4 px-4 md:px-10 h-16 border-b-2 border-foreground bg-card/95 backdrop-blur">
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-10 h-16 border-b-2 border-foreground bg-card/95 backdrop-blur">
         <div className="flex items-baseline gap-2 md:gap-3 min-w-0">
           <h1 className="font-serif-en text-base md:text-xl tracking-wide truncate">
             World · Playground
@@ -22,30 +16,6 @@ export default function AppLayout() {
             世界是一个游乐场
           </span>
         </div>
-
-        <nav className="flex border-2 border-foreground rounded-sm overflow-hidden">
-          {TABS.map((t) => {
-            const active =
-              t.to === "/"
-                ? location.pathname === "/"
-                : location.pathname.startsWith(t.to);
-            return (
-              <NavLink
-                key={t.to}
-                to={t.to}
-                className={cn(
-                  "px-2 md:px-4 py-1.5 text-[11px] md:text-xs tracking-wider border-r-2 border-foreground last:border-r-0 transition-colors",
-                  active
-                    ? "bg-foreground text-background"
-                    : "bg-transparent text-foreground hover:bg-secondary",
-                )}
-              >
-                <span className="hidden md:inline">{t.label}</span>
-                <span className="md:hidden">{t.en}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
 
         <NavLink
           to="/profile"
@@ -75,9 +45,11 @@ export default function AppLayout() {
         </NavLink>
       </header>
 
-      <main key={location.pathname} className="relative z-0 paper-in">
+      <main key={location.pathname} className="relative z-0 paper-in pb-20">
         <Outlet />
       </main>
+
+      <BottomDock />
     </div>
   );
 }

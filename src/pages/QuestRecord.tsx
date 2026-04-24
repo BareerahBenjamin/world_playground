@@ -34,12 +34,12 @@ const QuestRecord = () => {
   const [step, setStep] = useState<"write" | "echo">("write");
   const [celebrating, setCelebrating] = useState(false);
 
-  const mockEcho = () => {
-    if (!text.trim()) return "听到了，哪怕只是一个字，也算一笔。";
-    const t = text.toLowerCase();
-    if (t.includes("累") || t.includes("难")) return "听到了。累也是今天的一部分。";
-    if (t.includes("说") || t.includes("讲")) return "今天你扩张了自己的领地。";
-    if (t.includes("画") || t.includes("写")) return "丑也是一种认真。";
+  const mockEcho = (t = text) => {
+    if (!t.trim()) return "听到了，哪怕只是一个字，也算一笔。";
+    const lower = t.toLowerCase();
+    if (lower.includes("累") || lower.includes("难")) return "听到了。累也是今天的一部分。";
+    if (lower.includes("说") || lower.includes("讲")) return "今天你扩张了自己的领地。";
+    if (lower.includes("画") || lower.includes("写")) return "丑也是一种认真。";
     return `这一笔，会落在你的「${m.terrain}」上。`;
   };
 
@@ -53,12 +53,12 @@ const QuestRecord = () => {
   const litPos = placeHash(place || quest.title);
   const innerPos = placeHash(quest.id + feeling);
 
-  const submit = () => {
-    if (!text.trim()) {
+  const submit = (overrideText?: string) => {
+    const finalText = overrideText ?? text;
+    if (!finalText.trim()) {
       toast("写一个字也好，或者点跳过。");
       return;
     }
-    // 持久化：让"外部世界"和"内心地形"立刻同步显示这一笔
     const weatherList = ["☀️", "⛅", "🌧️", "🌙"] as const;
     const newRec: JourneyRecord = {
       id: `u-${Date.now()}`,
@@ -67,10 +67,10 @@ const QuestRecord = () => {
       questId: quest.id,
       category: quest.category,
       place: place || "未命名地点",
-      text,
+      text: finalText,
       tags: [CATEGORY_META[quest.category].label, quest.title],
       feeling,
-      echo: mockEcho(),
+      echo: mockEcho(finalText),
       mapPos: place ? { x: litPos.x, y: litPos.y } : undefined,
       innerPos: { x: innerPos.x, y: innerPos.y },
     };
@@ -233,13 +233,12 @@ const QuestRecord = () => {
         </div>
 
         <div className="flex gap-3 mt-6 flex-wrap">
-          <Button onClick={submit} className="bg-foreground text-background rounded-sm">
+          <Button onClick={() => submit()} className="bg-foreground text-background rounded-sm">
             存档 · 听一句回声
           </Button>
           <Button
             onClick={() => {
-              setText("不想写");
-              submit();
+              submit("不想写");
             }}
             variant="outline"
             className="border-2 border-foreground rounded-sm"

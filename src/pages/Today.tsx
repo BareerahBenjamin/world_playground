@@ -11,6 +11,7 @@ import {
   IconArrowRight,
   IconClock,
   IconFlame,
+  IconMap,
   IconMapPin,
   IconSpark,
   IconStarFour,
@@ -69,6 +70,17 @@ const Today = () => {
           ✦ 回到开头 · 重温序章
         </button>
       </div>
+      {/* 地图快捷入口 */}
+      <Link
+        to="/map"
+        className="flex items-center justify-between px-4 py-3 mb-6 dashed-frame hover:bg-secondary transition-colors"
+      >
+        <span className="font-hand text-sm inline-flex items-center gap-2">
+          <IconMap size={15} /> 去地图 · 查看你的版图
+        </span>
+        <IconArrowRight size={13} className="text-muted-foreground" />
+      </Link>
+
       <header className="flex items-start justify-between mb-8">
         <div>
           <p className="font-hand text-base text-muted-foreground">{today}</p>
@@ -289,7 +301,7 @@ const Today = () => {
         最近的足迹
         <span className="flex-1 h-px bg-secondary" />
         <Link
-          to="/chronicle"
+          to="/records"
           className="font-hand text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 hand-link"
         >
           翻开编年史 <IconArrowRight size={12} />
