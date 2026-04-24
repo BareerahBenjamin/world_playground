@@ -22,11 +22,7 @@ import {
 
 const Today = () => {
   const navigate = useNavigate();
-  // 首次到访引导至开篇叙事
-  if (typeof window !== "undefined" && !sessionStorage.getItem("seenIntro")) {
-    sessionStorage.setItem("seenIntro", "1");
-    window.location.replace("/intro/1");
-  }
+  
   const replayIntro = () => {
     sessionStorage.removeItem("seenIntro");
     navigate("/intro/1");
