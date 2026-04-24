@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import bg from "@/assets/bg-tower-main.png";
 
 const buttons = [
-  { to: "/goals", label: "接受副本挑战，探索世界", hint: "GOALS · 关卡" },
-  { to: "/", label: "开启心愿征程，步履生光", hint: "TODAY · 今日" },
+  { to: "/goals", label: "开启心愿征程，步履生光", hint: "GOALS · 关卡" },
+  { to: "/", label: "接受副本挑战，探索世界", hint: "TODAY · 今日" },
   { to: "/chronicle", label: "留下心境絮语，闪光自愈", hint: "CHRONICLE · 编年史" },
 ];
 
